@@ -36,20 +36,23 @@ const convert = (file) => {
             array.push(line);
         });
 
-        reader.on('close', () => resolve(array.join('').split(',')));
+        reader.on('close', () => resolve(array));
     });
 }
 
 io.on('connection', (client) => {
     client.emit('serverMessage', {message: "Socket IO is Up and Running 🎉", date: (new Date()).toDateString()});
+    let timer;
 
-    const timer = setInterval(() => {
-        convert('myText.txt')
-        .then(text => {
-            client.emit('receiveData', {text})
-        })
-        .catch(err => console.error(err));
-    }, 1000);
+    client.on('fetchData', (interval) => {
+        timer = setInterval(() => {
+            convert('traffic.txt')
+            .then(text => {
+                client.emit('receiveData', {text})
+            })
+            .catch(err => console.error(err));
+        }, interval);
+    });
 
     client.on('disconnect', () => {
         clearInterval(timer);
